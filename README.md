@@ -1,58 +1,150 @@
 # AWS Batch Scheduled Jobs
 
-## Overview
+## Project Overview
 
-Reusable Terraform module architecture for scheduled AWS Batch jobs running on Fargate.
+This repository contains reusable Terraform modules for scheduled AWS Batch jobs running on Fargate.
 
 Target flow:
 
 ```text
-EventBridge Scheduler -> AWS Step Functions -> AWS Batch SubmitJob -> AWS Batch Fargate Job
+EventBridge Scheduler -> Step Functions -> AWS Batch Fargate Job
 ```
 
-This repository intentionally does not create AWS resources from the root directory. All AWS resources should live in reusable modules, and runnable configurations should live under `examples/`.
+The root directory does not create AWS resources directly. Reusable infrastructure lives under `modules/`, and runnable examples live under `examples/`.
 
 ## Architecture
 
-The architecture is split into small modules that can be composed directly or through the higher-level `scheduled-batch-job` module.
+```text
+EventBridge Scheduler
+        |
+        v
+AWS Step Functions
+        |
+        v
+AWS Batch SubmitJob
+        |
+        v
+AWS Batch Job Queue
+        |
+        v
+AWS Batch Fargate Compute Environment
+        |
+        v
+Container Job
+```
 
-- EventBridge Scheduler invokes a Step Functions state machine.
-- Step Functions submits an AWS Batch job using the service integration.
-- AWS Batch runs the job on Fargate.
-- Optional VPC endpoints support private subnet deployments.
+EventBridge Scheduler starts a Step Functions state machine. The state machine submits an AWS Batch job with the optimized synchronous Batch integration. AWS Batch places the job on a queue backed by a Fargate compute environment, then runs the configured container.
 
 ## Modules
 
-- `modules/batch-fargate`: AWS Batch Fargate compute environment, job queue, job definition, and related IAM.
-- `modules/stepfunctions-batch-submit`: Step Functions state machine for synchronous AWS Batch `SubmitJob`.
-- `modules/eventbridge-scheduler-sfn`: EventBridge Scheduler schedule targeting Step Functions.
-- `modules/vpc-endpoints-fargate`: VPC endpoints commonly needed by private Fargate workloads.
-- `modules/scheduled-batch-job`: Composition module for the full scheduled Batch job pattern.
+- `modules/batch-fargate`: Creates the AWS Batch Fargate compute environment, job queue, job definition, CloudWatch Log Group, task security group, and IAM roles for Batch, task execution, and job runtime.
+- `modules/stepfunctions-batch-submit`: Creates a Standard Step Functions state machine that uses `batch:submitJob.sync` and an execution role with permissions to submit and monitor Batch jobs.
+- `modules/eventbridge-scheduler-sfn`: Creates an EventBridge Scheduler schedule, execution role, and least-privilege `states:StartExecution` policy for a target state machine.
+- `modules/vpc-endpoints-fargate`: Creates optional VPC endpoints for private subnet Fargate jobs: ECR API, ECR Docker, CloudWatch Logs, and S3 gateway.
+- `modules/scheduled-batch-job`: Convenience wrapper that composes the Batch, Step Functions, and Scheduler modules into one scheduled job flow.
+
+The first four modules are building blocks. Use them directly when you need separate lifecycles, shared Batch infrastructure, multiple schedules, custom state machines, or custom IAM wiring.
+
+Use `modules/scheduled-batch-job` when you want the standard end-to-end flow with a compact input interface.
 
 ## Examples
 
-- `examples/basic`: Minimal example using the scheduled Batch job composition.
-- `examples/private-subnet-with-vpc-endpoints`: Private subnet example with VPC endpoints.
+- `examples/basic`: Minimal wrapper usage for an existing VPC and subnets.
+- `examples/private-subnet-with-vpc-endpoints`: Wrapper usage with VPC endpoints for private subnets without a NAT Gateway.
 
-## Usage
+## Basic Usage
 
-```bash
-cd examples/basic
-terraform init
-terraform plan
+```hcl
+module "scheduled_batch_job" {
+  source = "./modules/scheduled-batch-job"
+
+  name            = "daily-report"
+  vpc_id          = "vpc-xxxxxxxxxxxxxxxxx"
+  subnet_ids      = ["subnet-aaaaaaaaaaaaaaaaa", "subnet-bbbbbbbbbbbbbbbbb"]
+  container_image = "123456789012.dkr.ecr.eu-central-1.amazonaws.com/my-batch-job:latest"
+
+  assign_public_ip    = false
+  schedule_expression = "cron(0 3 * * ? *)"
+  schedule_timezone   = "Europe/Belgrade"
+
+  environment_variables = {
+    APP_ENV   = "prod"
+    LOG_LEVEL = "info"
+  }
+
+  tags = {
+    Project = "scheduled-batch"
+    Env     = "prod"
+  }
+}
 ```
 
-Copy `terraform.tfvars.example` to a local `terraform.tfvars` file before planning or applying an example.
+## Network Options
+
+- Private subnet with NAT Gateway: keep `assign_public_ip = false`. Fargate uses NAT for ECR, CloudWatch Logs, and other outbound traffic.
+- Private subnet with VPC endpoints: keep `assign_public_ip = false` and use `modules/vpc-endpoints-fargate` for ECR, CloudWatch Logs, and S3 access without NAT.
+- Public subnet with public IP: set `assign_public_ip = true`. Use this only when public subnet routing and security controls are appropriate.
+
+## Manual Testing
+
+Start the Step Functions state machine manually:
+
+```bash
+aws stepfunctions start-execution --state-machine-arn "$(terraform output -raw state_machine_arn)" --input '{"manual": true}'
+```
+
+List running Batch jobs:
+
+```bash
+aws batch list-jobs --job-queue "$(terraform output -raw batch_job_queue_arn)" --job-status RUNNING
+```
 
 ## Troubleshooting
 
-- Run `terraform fmt -recursive` before opening a pull request.
-- Ensure the selected AWS region supports AWS Batch on Fargate, Step Functions, and EventBridge Scheduler.
-- Check IAM permissions for Terraform, Step Functions, EventBridge Scheduler, and AWS Batch service roles.
+Batch job remains `RUNNABLE`:
 
-## Security notes
+- Confirm the compute environment is `VALID` and `ENABLED`.
+- Check that the job queue is enabled and attached to the Fargate compute environment.
+- Verify subnet capacity and security group egress.
+- Confirm requested vCPU and memory values are valid for Fargate.
 
-- Do not commit `*.tfvars` files containing environment-specific or sensitive values.
-- Do not hardcode AWS account IDs or partitions.
-- Prefer least-privilege IAM policies when module implementations are added.
-- Lambda and EC2 AWS Batch compute environments are intentionally out of scope for this architecture.
+`CannotPullContainerError`:
+
+- Confirm the image URI exists in the selected AWS region.
+- For private subnets without NAT, ensure ECR API, ECR Docker, CloudWatch Logs, and S3 endpoints exist.
+- Ensure the S3 gateway endpoint is attached to the private subnet route tables.
+- Ensure endpoint security group ingress allows TCP 443 from the Batch task security group.
+
+`AccessDenied` for `states:StartExecution`:
+
+- Check the EventBridge Scheduler execution role policy.
+- Confirm it allows `states:StartExecution` on the exact state machine ARN.
+- Check the Scheduler trust policy source account and source ARN conditions.
+
+`AccessDenied` for `batch:SubmitJob`:
+
+- Check the Step Functions execution role policy.
+- Confirm it allows `batch:SubmitJob` on the exact job queue ARN and job definition ARN.
+- Confirm it includes the monitoring permissions required by `.sync`.
+
+CloudWatch logs do not appear:
+
+- Confirm the Batch execution role has the Amazon ECS task execution managed policy.
+- Confirm the Batch job definition log configuration points to the expected log group and region.
+- For private subnets, confirm the CloudWatch Logs VPC endpoint exists and permits TCP 443 from the Batch task security group.
+
+Scheduler does not start the state machine:
+
+- Confirm the schedule is `ENABLED`.
+- Check schedule expression and timezone.
+- Check Scheduler target input is valid JSON.
+- Check Scheduler role trust conditions and `states:StartExecution` permissions.
+
+## Security Notes
+
+- Do not add broad admin policies to the Batch job role.
+- Add runtime permissions only to the Batch job role, such as S3, DynamoDB, Secrets Manager, or SQS permissions required by the container.
+- Use the execution role for ECR image pulls and CloudWatch Logs writes.
+- The Scheduler role should only allow `states:StartExecution` on the specific state machine.
+- The Step Functions role should allow `batch:SubmitJob` only on the specific Batch queue and job definition.
+- Do not commit real `*.tfvars`, Terraform state files, credentials, or secrets.
