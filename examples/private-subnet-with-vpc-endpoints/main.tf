@@ -1,10 +1,11 @@
 module "vpc_endpoints_fargate" {
   source = "../../modules/vpc-endpoints-fargate"
 
-  name               = var.name
-  vpc_id             = var.vpc_id
-  subnet_ids         = var.subnet_ids
-  security_group_ids = var.security_group_ids
+  name                       = var.name
+  vpc_id                     = var.vpc_id
+  subnet_ids                 = var.subnet_ids
+  route_table_ids            = var.route_table_ids
+  allowed_security_group_ids = var.security_group_ids
 }
 
 module "scheduled_batch_job" {
