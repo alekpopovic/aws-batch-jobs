@@ -1,20 +1,17 @@
 variable "aws_region" {
   description = "AWS region for the example."
   type        = string
+  default     = "eu-central-1"
 }
 
 variable "name" {
   description = "Name prefix for the scheduled AWS Batch job."
   type        = string
+  default     = "scheduled-batch-private"
 }
 
 variable "vpc_id" {
-  description = "VPC ID where endpoints will be created."
-  type        = string
-}
-
-variable "schedule_expression" {
-  description = "EventBridge Scheduler expression."
+  description = "VPC ID where AWS Batch Fargate resources and endpoints will be created."
   type        = string
 }
 
@@ -31,4 +28,22 @@ variable "route_table_ids" {
 variable "container_image" {
   description = "Container image used by the AWS Batch job definition."
   type        = string
+}
+
+variable "schedule_expression" {
+  description = "EventBridge Scheduler expression."
+  type        = string
+  default     = "cron(0 3 * * ? *)"
+}
+
+variable "schedule_timezone" {
+  description = "Timezone used to evaluate the schedule expression."
+  type        = string
+  default     = "Europe/Belgrade"
+}
+
+variable "tags" {
+  description = "Tags applied to resources created by the modules."
+  type        = map(string)
+  default     = {}
 }
