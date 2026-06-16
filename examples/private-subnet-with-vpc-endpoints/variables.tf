@@ -28,11 +28,6 @@ variable "route_table_ids" {
   type        = list(string)
 }
 
-variable "security_group_ids" {
-  description = "Security group IDs attached to AWS Batch Fargate jobs and VPC endpoints."
-  type        = list(string)
-}
-
 variable "container_image" {
   description = "Container image used by the AWS Batch job definition."
   type        = string

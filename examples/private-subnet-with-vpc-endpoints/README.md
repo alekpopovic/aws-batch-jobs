@@ -1,6 +1,6 @@
 # Private subnet with VPC endpoints example
 
-Example showing how the scheduled Batch job composition module can be used with VPC endpoints for private subnet workloads.
+Example showing how the scheduled Batch job wrapper module can be used with VPC endpoints for private subnet workloads.
 
 ## Usage
 
@@ -10,7 +10,4 @@ terraform init
 terraform plan
 ```
 
-## TODO
-
-- Update endpoint inputs once `vpc-endpoints-fargate` is implemented.
-- Add validation instructions once resources are implemented.
+The example expects an existing VPC, private subnets, and route tables. It creates the scheduled Batch job flow and the VPC endpoints needed for Fargate image pulls and CloudWatch Logs without a NAT Gateway.

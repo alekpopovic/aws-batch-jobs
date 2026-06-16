@@ -5,7 +5,7 @@ module "vpc_endpoints_fargate" {
   vpc_id                     = var.vpc_id
   subnet_ids                 = var.subnet_ids
   route_table_ids            = var.route_table_ids
-  allowed_security_group_ids = var.security_group_ids
+  allowed_security_group_ids = [module.scheduled_batch_job.batch_security_group_id]
 }
 
 module "scheduled_batch_job" {
@@ -13,7 +13,7 @@ module "scheduled_batch_job" {
 
   name                = var.name
   schedule_expression = var.schedule_expression
+  vpc_id              = var.vpc_id
   subnet_ids          = var.subnet_ids
-  security_group_ids  = var.security_group_ids
   container_image     = var.container_image
 }

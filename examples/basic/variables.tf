@@ -13,13 +13,13 @@ variable "schedule_expression" {
   type        = string
 }
 
-variable "subnet_ids" {
-  description = "Subnet IDs where AWS Batch Fargate jobs will run."
-  type        = list(string)
+variable "vpc_id" {
+  description = "VPC ID where AWS Batch Fargate resources will run."
+  type        = string
 }
 
-variable "security_group_ids" {
-  description = "Security group IDs attached to AWS Batch Fargate jobs."
+variable "subnet_ids" {
+  description = "Subnet IDs where AWS Batch Fargate jobs will run."
   type        = list(string)
 }
 

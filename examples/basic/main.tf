@@ -3,7 +3,7 @@ module "scheduled_batch_job" {
 
   name                = var.name
   schedule_expression = var.schedule_expression
+  vpc_id              = var.vpc_id
   subnet_ids          = var.subnet_ids
-  security_group_ids  = var.security_group_ids
   container_image     = var.container_image
 }

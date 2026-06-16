@@ -1,6 +1,6 @@
 # Basic example
 
-Minimal example showing how the `scheduled-batch-job` composition module will be used.
+Minimal example showing how to use the `scheduled-batch-job` wrapper module.
 
 ## Usage
 
@@ -10,7 +10,4 @@ terraform init
 terraform plan
 ```
 
-## TODO
-
-- Update inputs as module implementation details are added.
-- Add validation instructions once resources are implemented.
+The example expects an existing VPC and subnets. It creates the AWS Batch Fargate setup, Step Functions state machine, and EventBridge Scheduler schedule through the wrapper module.
