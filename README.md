@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This repository contains reusable Terraform modules for scheduled AWS Batch jobs running on Fargate.
+This repository contains reusable Terraform modules for scheduled batch jobs across AWS, GCP, and a future multicloud switcher.
 
 Target flow:
 
@@ -10,7 +10,7 @@ Target flow:
 EventBridge Scheduler -> Step Functions -> AWS Batch Fargate Job
 ```
 
-The root directory does not create AWS resources directly. Reusable infrastructure lives under `modules/`, and runnable examples live under `examples/`.
+The root directory does not create cloud resources directly. Reusable infrastructure lives under `modules/aws`, `modules/gcp`, and `modules/multicloud`; runnable examples live under `examples/`.
 
 ## Architecture
 
@@ -37,26 +37,31 @@ EventBridge Scheduler starts a Step Functions state machine. The state machine s
 
 ## Modules
 
-- `modules/batch-fargate`: Creates the AWS Batch Fargate compute environment, job queue, job definition, CloudWatch Log Group, task security group, and IAM roles for Batch, task execution, and job runtime.
-- `modules/stepfunctions-batch-submit`: Creates a Standard Step Functions state machine that uses `batch:submitJob.sync` and an execution role with permissions to submit and monitor Batch jobs.
-- `modules/eventbridge-scheduler-sfn`: Creates an EventBridge Scheduler schedule, execution role, and least-privilege `states:StartExecution` policy for a target state machine.
-- `modules/vpc-endpoints-fargate`: Creates optional VPC endpoints for private subnet Fargate jobs: ECR API, ECR Docker, CloudWatch Logs, and S3 gateway.
-- `modules/scheduled-batch-job`: Convenience wrapper that composes the Batch, Step Functions, and Scheduler modules into one scheduled job flow.
+- `modules/aws/batch-fargate`: Creates the AWS Batch Fargate compute environment, job queue, job definition, CloudWatch Log Group, task security group, and IAM roles for Batch, task execution, and job runtime.
+- `modules/aws/stepfunctions-batch-submit`: Creates a Standard Step Functions state machine that uses `batch:submitJob.sync` and an execution role with permissions to submit and monitor Batch jobs.
+- `modules/aws/eventbridge-scheduler-sfn`: Creates an EventBridge Scheduler schedule, execution role, and least-privilege `states:StartExecution` policy for a target state machine.
+- `modules/aws/vpc-endpoints-fargate`: Creates optional VPC endpoints for private subnet Fargate jobs: ECR API, ECR Docker, CloudWatch Logs, and S3 gateway.
+- `modules/aws/scheduled-batch-job`: Convenience wrapper that composes the AWS Batch, Step Functions, and Scheduler modules into one scheduled job flow.
+- `modules/gcp/*`: Skeleton GCP modules for project services, runtime IAM, Workflows, Cloud Scheduler, private networking, and a scheduled Batch job wrapper.
+- `modules/multicloud/scheduled-batch-job`: Skeleton switcher module for selecting an AWS or GCP implementation.
 
 The first four modules are building blocks. Use them directly when you need separate lifecycles, shared Batch infrastructure, multiple schedules, custom state machines, or custom IAM wiring.
 
-Use `modules/scheduled-batch-job` when you want the standard end-to-end flow with a compact input interface.
+Use `modules/aws/scheduled-batch-job` when you want the standard AWS end-to-end flow with a compact input interface.
 
 ## Examples
 
-- `examples/basic`: Minimal wrapper usage for an existing VPC and subnets.
-- `examples/private-subnet-with-vpc-endpoints`: Wrapper usage with VPC endpoints for private subnets without a NAT Gateway.
+- `examples/aws/basic`: Minimal AWS wrapper usage for an existing VPC and subnets.
+- `examples/aws/private-subnet-with-vpc-endpoints`: AWS wrapper usage with VPC endpoints for private subnets without a NAT Gateway.
+- `examples/gcp/basic`: Skeleton GCP wrapper example.
+- `examples/gcp/private-subnet-private-google-access`: Skeleton GCP private subnet example.
+- `examples/multicloud-switcher`: Skeleton multicloud switcher example.
 
 ## Basic Usage
 
 ```hcl
 module "scheduled_batch_job" {
-  source = "./modules/scheduled-batch-job"
+  source = "./modules/aws/scheduled-batch-job"
 
   name            = "daily-report"
   vpc_id          = "vpc-xxxxxxxxxxxxxxxxx"
@@ -85,7 +90,7 @@ The wrapper can let EventBridge Scheduler input override the AWS Batch container
 
 ```hcl
 module "scheduled_batch_job" {
-  source = "./modules/scheduled-batch-job"
+  source = "./modules/aws/scheduled-batch-job"
 
   name            = "daily-report"
   vpc_id          = "vpc-xxxxxxxxxxxxxxxxx"
@@ -107,7 +112,7 @@ When `enable_command_override_from_scheduler_input = true`, the wrapper passes `
 ## Network Options
 
 - Private subnet with NAT Gateway: keep `assign_public_ip = false`. Fargate uses NAT for ECR, CloudWatch Logs, and other outbound traffic.
-- Private subnet with VPC endpoints: keep `assign_public_ip = false` and use `modules/vpc-endpoints-fargate` for ECR, CloudWatch Logs, and S3 access without NAT.
+- Private subnet with VPC endpoints: keep `assign_public_ip = false` and use `modules/aws/vpc-endpoints-fargate` for ECR, CloudWatch Logs, and S3 access without NAT.
 - Public subnet with public IP: set `assign_public_ip = true`. Use this only when public subnet routing and security controls are appropriate.
 
 ## Manual Testing

@@ -20,17 +20,17 @@ jobs:
         run: terraform fmt -check -recursive
 
       - name: Terraform init basic example
-        working-directory: examples/basic
+        working-directory: examples/aws/basic
         run: terraform init -backend=false
 
       - name: Terraform validate basic example
-        working-directory: examples/basic
+        working-directory: examples/aws/basic
         run: terraform validate
 
       - name: Terraform init private subnet example
-        working-directory: examples/private-subnet-with-vpc-endpoints
+        working-directory: examples/aws/private-subnet-with-vpc-endpoints
         run: terraform init -backend=false
 
       - name: Terraform validate private subnet example
-        working-directory: examples/private-subnet-with-vpc-endpoints
+        working-directory: examples/aws/private-subnet-with-vpc-endpoints
         run: terraform validate

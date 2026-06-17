@@ -1,0 +1,8 @@
+project_id = "<gcp-project-id>"
+region     = "europe-west1"
+name       = "scheduled-batch-gcp-basic"
+
+labels = {
+  project = "scheduled-batch"
+  env     = "dev"
+}
