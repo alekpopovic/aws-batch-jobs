@@ -5,8 +5,8 @@ on:
   pull_request:
 
 jobs:
-  terraform-validate:
-    name: terraform-validate
+  terraform-fmt:
+    name: terraform-fmt
     runs-on: ubuntu-latest
 
     steps:
@@ -19,18 +19,31 @@ jobs:
       - name: Terraform fmt
         run: terraform fmt -check -recursive
 
-      - name: Terraform init basic example
-        working-directory: examples/aws/basic
+  terraform-validate:
+    name: terraform-validate (${{ matrix.directory }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        directory:
+          - examples/aws/basic
+          - examples/aws/private-subnet-with-vpc-endpoints
+          - examples/gcp/basic
+          - examples/gcp/private-subnet-private-google-access
+          - examples/multicloud-switcher
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform init
+        working-directory: ${{ matrix.directory }}
         run: terraform init -backend=false
 
-      - name: Terraform validate basic example
-        working-directory: examples/aws/basic
-        run: terraform validate
-
-      - name: Terraform init private subnet example
-        working-directory: examples/aws/private-subnet-with-vpc-endpoints
-        run: terraform init -backend=false
-
-      - name: Terraform validate private subnet example
-        working-directory: examples/aws/private-subnet-with-vpc-endpoints
+      - name: Terraform validate
+        working-directory: ${{ matrix.directory }}
         run: terraform validate
