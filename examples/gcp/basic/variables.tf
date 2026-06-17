@@ -12,7 +12,7 @@ variable "region" {
 variable "name" {
   description = "Name prefix for the scheduled GCP Batch job."
   type        = string
-  default     = "scheduled-batch-gcp-basic"
+  default     = "multicloud-scheduled-jobs-gcp-basic"
 }
 
 variable "labels" {

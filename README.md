@@ -78,7 +78,7 @@ module "scheduled_batch_job" {
   }
 
   tags = {
-    Project = "scheduled-batch"
+    Project = "multicloud-scheduled-jobs"
     Env     = "prod"
   }
 }

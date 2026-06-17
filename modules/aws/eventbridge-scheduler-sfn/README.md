@@ -27,7 +27,7 @@ module "scheduler" {
   }
 
   tags = {
-    Project = "scheduled-batch-jobs"
+    Project = "multicloud-scheduled-jobs"
   }
 }
 ```

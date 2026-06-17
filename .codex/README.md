@@ -6,9 +6,10 @@ Start with the root `AGENTS.md` for active repository instructions.
 
 ## Current Focus
 
-- Build reusable Terraform modules for scheduled AWS Batch jobs on Fargate.
+- Build reusable Terraform modules for Multicloud Scheduled Jobs across AWS, GCP, and a future provider switcher.
 - Keep root Terraform resource-free.
-- Implement AWS resources incrementally in follow-up prompts.
+- Keep implemented AWS resources under `modules/aws/`.
+- Add GCP and multicloud behavior incrementally in follow-up prompts.
 - Follow the root `AGENTS.md` Git Workflow: after prompts that change files, add, commit, and push the completed changes.
 
 ## Pending Implementation Areas
@@ -17,5 +18,7 @@ Start with the root `AGENTS.md` for active repository instructions.
 - Step Functions state machine using synchronous AWS Batch SubmitJob integration.
 - EventBridge Scheduler schedule and invocation IAM.
 - VPC endpoints for private subnet Fargate workloads.
-- Composition wiring in `modules/scheduled-batch-job`.
+- Composition wiring in `modules/aws/scheduled-batch-job`.
+- GCP module implementations under `modules/gcp/`.
+- Multicloud switcher implementation under `modules/multicloud/`.
 - Example validation in GitHub Actions.

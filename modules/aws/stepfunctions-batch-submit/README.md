@@ -32,7 +32,7 @@ module "batch_submit_state_machine" {
   }
 
   tags = {
-    Project = "scheduled-batch-jobs"
+    Project = "multicloud-scheduled-jobs"
   }
 }
 ```

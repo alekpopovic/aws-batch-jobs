@@ -1,2 +1,2 @@
 provider_name = "aws"
-name          = "scheduled-batch-multicloud"
+name          = "multicloud-scheduled-jobs-switcher"

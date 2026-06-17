@@ -7,5 +7,5 @@ variable "provider_name" {
 variable "name" {
   description = "Name prefix for the scheduled batch job."
   type        = string
-  default     = "scheduled-batch-multicloud"
+  default     = "multicloud-scheduled-jobs-switcher"
 }

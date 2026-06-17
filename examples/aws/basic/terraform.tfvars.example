@@ -1,5 +1,5 @@
 aws_region          = "eu-central-1"
-name                = "scheduled-batch-basic"
+name                = "multicloud-scheduled-jobs-aws-basic"
 vpc_id              = "vpc-xxxxxxxxxxxxxxxxx"
 subnet_ids          = ["subnet-aaaaaaaaaaaaaaaaa", "subnet-bbbbbbbbbbbbbbbbb"]
 container_image     = "<aws-account-id>.dkr.ecr.eu-central-1.amazonaws.com/my-batch-job:latest"
@@ -8,6 +8,6 @@ schedule_expression = "cron(0 3 * * ? *)"
 schedule_timezone   = "Europe/Belgrade"
 
 tags = {
-  Project = "scheduled-batch"
+  Project = "multicloud-scheduled-jobs"
   Env     = "dev"
 }

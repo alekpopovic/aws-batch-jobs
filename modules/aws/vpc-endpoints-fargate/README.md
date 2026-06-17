@@ -40,7 +40,7 @@ module "vpc_endpoints_fargate" {
   ]
 
   tags = {
-    Project = "scheduled-batch-jobs"
+    Project = "multicloud-scheduled-jobs"
   }
 }
 ```

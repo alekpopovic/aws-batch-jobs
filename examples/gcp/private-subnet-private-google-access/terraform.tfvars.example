@@ -1,10 +1,10 @@
 project_id = "<gcp-project-id>"
 region     = "europe-west1"
-name       = "scheduled-batch-gcp-private"
+name       = "multicloud-scheduled-jobs-gcp-private"
 network    = "projects/<gcp-project-id>/global/networks/example"
 subnetwork = "projects/<gcp-project-id>/regions/europe-west1/subnetworks/private"
 
 labels = {
-  project = "scheduled-batch"
+  project = "multicloud-scheduled-jobs"
   env     = "prod"
 }

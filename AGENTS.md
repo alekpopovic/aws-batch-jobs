@@ -2,9 +2,9 @@
 
 ## Project
 
-This repository contains Terraform modules and examples for scheduled AWS Batch jobs on Fargate.
+This repository contains Terraform modules and examples for scheduled batch jobs across AWS, GCP, and a future multicloud switcher.
 
-Target architecture:
+Current implemented AWS target architecture:
 
 ```text
 EventBridge Scheduler -> AWS Step Functions -> AWS Batch SubmitJob -> AWS Batch Fargate Job
@@ -13,9 +13,13 @@ EventBridge Scheduler -> AWS Step Functions -> AWS Batch SubmitJob -> AWS Batch 
 ## Ground Rules
 
 - Keep the root directory free of Terraform resources.
-- Put AWS resources in reusable modules under `modules/`.
+- Put AWS resources in reusable modules under `modules/aws/`.
+- Put GCP resources in reusable modules under `modules/gcp/`.
+- Put provider switcher abstractions under `modules/multicloud/`.
 - Put runnable examples under `examples/`.
 - Do not use Lambda.
+- Do not use Cloud Functions.
+- Do not use Cloud Run jobs.
 - Do not use EC2 AWS Batch compute environments.
 - AWS Batch compute environments must use Fargate.
 - Do not hardcode AWS account IDs.
@@ -29,19 +33,24 @@ EventBridge Scheduler -> AWS Step Functions -> AWS Batch SubmitJob -> AWS Batch 
 - Terraform `required_version` must be `>= 1.5.0`.
 - AWS provider version must be `>= 5.0`.
 - Run `terraform fmt -recursive` after editing Terraform files.
-- Keep examples self-contained and provider-configured through `var.aws_region`.
+- Keep examples self-contained and provider-configured through provider-specific region variables.
 - Do not commit `*.tfvars`; use `*.tfvars.example` for sample values.
 - Do not ignore `.terraform.lock.hcl`.
 
 ## Repository Layout
 
-- `modules/batch-fargate`: AWS Batch Fargate resources and IAM.
-- `modules/stepfunctions-batch-submit`: Step Functions state machine for synchronous Batch submit jobs.
-- `modules/eventbridge-scheduler-sfn`: EventBridge Scheduler invoking Step Functions.
-- `modules/vpc-endpoints-fargate`: VPC endpoints for private Fargate workloads.
-- `modules/scheduled-batch-job`: Composition module for the full scheduled job pattern.
-- `examples/basic`: Minimal usage example.
-- `examples/private-subnet-with-vpc-endpoints`: Private subnet usage example.
+- `modules/aws/batch-fargate`: AWS Batch Fargate resources and IAM.
+- `modules/aws/stepfunctions-batch-submit`: Step Functions state machine for synchronous Batch submit jobs.
+- `modules/aws/eventbridge-scheduler-sfn`: EventBridge Scheduler invoking Step Functions.
+- `modules/aws/vpc-endpoints-fargate`: VPC endpoints for private Fargate workloads.
+- `modules/aws/scheduled-batch-job`: AWS composition module for the full scheduled job pattern.
+- `modules/gcp/*`: Skeleton GCP modules for the future GCP scheduled Batch implementation.
+- `modules/multicloud/scheduled-batch-job`: Skeleton switcher module for AWS/GCP selection.
+- `examples/aws/basic`: Minimal AWS usage example.
+- `examples/aws/private-subnet-with-vpc-endpoints`: AWS private subnet usage example.
+- `examples/gcp/basic`: Skeleton GCP usage example.
+- `examples/gcp/private-subnet-private-google-access`: Skeleton GCP private subnet usage example.
+- `examples/multicloud-switcher`: Skeleton provider switcher example.
 
 ## Validation
 

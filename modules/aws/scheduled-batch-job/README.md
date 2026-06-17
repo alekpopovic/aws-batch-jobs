@@ -33,7 +33,7 @@ module "scheduled_batch_job" {
   schedule_timezone   = "Europe/Belgrade"
 
   tags = {
-    Project = "scheduled-batch-jobs"
+    Project = "multicloud-scheduled-jobs"
   }
 }
 ```

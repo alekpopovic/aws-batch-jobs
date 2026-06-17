@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "name" {
   description = "Name prefix for the scheduled AWS Batch job."
   type        = string
-  default     = "scheduled-batch-private"
+  default     = "multicloud-scheduled-jobs-aws-private"
 }
 
 variable "vpc_id" {
