@@ -79,6 +79,31 @@ module "scheduled_batch_job" {
 }
 ```
 
+## Command Override From Scheduler Input
+
+The wrapper can let EventBridge Scheduler input override the AWS Batch container command for each scheduled execution.
+
+```hcl
+module "scheduled_batch_job" {
+  source = "./modules/scheduled-batch-job"
+
+  name            = "daily-report"
+  vpc_id          = "vpc-xxxxxxxxxxxxxxxxx"
+  subnet_ids      = ["subnet-aaaaaaaaaaaaaaaaa", "subnet-bbbbbbbbbbbbbbbbb"]
+  container_image = "<aws-account-id>.dkr.ecr.eu-central-1.amazonaws.com/my-batch-job:latest"
+
+  enable_command_override_from_scheduler_input = true
+
+  scheduler_target_input = {
+    source  = "eventbridge-scheduler"
+    name    = "daily-report"
+    command = ["sh", "-c", "echo scheduled run; date; env"]
+  }
+}
+```
+
+When `enable_command_override_from_scheduler_input = true`, the wrapper passes `command_json_path = "$.command"` to the Step Functions module. The scheduler input must contain a `command` key, and `command` must be a list of strings.
+
 ## Network Options
 
 - Private subnet with NAT Gateway: keep `assign_public_ip = false`. Fargate uses NAT for ECR, CloudWatch Logs, and other outbound traffic.

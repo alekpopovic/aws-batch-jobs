@@ -60,6 +60,8 @@ With that setting, an execution input can include:
 }
 ```
 
+The `command` value must be a list of strings. The module emits this as the ASL key `"Command.$"` inside `ContainerOverrides`.
+
 ## IAM Permissions
 
 The module creates an execution role assumed by `states.amazonaws.com`.

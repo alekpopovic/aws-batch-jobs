@@ -59,7 +59,7 @@ module "scheduled_batch_job" {
 }
 ```
 
-When command override is enabled, `scheduler_target_input` should contain the key `command`.
+When command override is enabled, `scheduler_target_input` should contain the key `command`. The `command` value must be a list of strings, matching the AWS Batch container command format.
 
 ## Network Options
 

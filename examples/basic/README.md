@@ -34,3 +34,19 @@ List running AWS Batch jobs:
 ```bash
 aws batch list-jobs --job-queue "$(terraform output -raw batch_job_queue_arn)" --job-status RUNNING
 ```
+
+## Optional Command Override
+
+This example does not enable command override by default. To let Scheduler input override the Batch container command, add the following to the `scheduled_batch_job` module call in `main.tf`:
+
+```hcl
+# enable_command_override_from_scheduler_input = true
+#
+# scheduler_target_input = {
+#   source  = "eventbridge-scheduler"
+#   name    = var.name
+#   command = ["sh", "-c", "echo scheduled run; date; env"]
+# }
+```
+
+When enabled, `scheduler_target_input` must contain a `command` key, and `command` must be a list of strings.
