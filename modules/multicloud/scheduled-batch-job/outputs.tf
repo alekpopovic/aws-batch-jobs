@@ -5,17 +5,22 @@ output "cloud_provider" {
 
 output "scheduler_identifier" {
   description = "Selected provider scheduler identifier."
-  value       = local.is_aws ? try(module.aws[0].scheduler_schedule_arn, null) : try(module.gcp[0].scheduler_job_id, null)
+  value       = local.is_aws ? try(module.aws[0].scheduler_schedule_arn, null) : local.is_gcp ? try(module.gcp[0].scheduler_job_id, null) : try(module.azure[0].logic_app_id, null)
 }
 
 output "orchestrator_identifier" {
   description = "Selected provider orchestrator identifier."
-  value       = local.is_aws ? try(module.aws[0].state_machine_arn, null) : try(module.gcp[0].workflow_id, null)
+  value       = local.is_aws ? try(module.aws[0].state_machine_arn, null) : local.is_gcp ? try(module.gcp[0].workflow_id, null) : try(module.azure[0].logic_app_id, null)
+}
+
+output "batch_runtime_identifier" {
+  description = "Selected provider Batch runtime identifier."
+  value       = local.is_aws ? try(module.aws[0].batch_job_queue_arn, null) : local.is_gcp ? try(module.gcp[0].batch_runtime_service_account_email, null) : try(module.azure[0].batch_pool_id, null)
 }
 
 output "batch_queue_or_runtime_identifier" {
-  description = "AWS Batch queue ARN or GCP Batch runtime service account email."
-  value       = local.is_aws ? try(module.aws[0].batch_job_queue_arn, null) : try(module.gcp[0].batch_runtime_service_account_email, null)
+  description = "Backward-compatible alias for batch_runtime_identifier."
+  value       = local.is_aws ? try(module.aws[0].batch_job_queue_arn, null) : local.is_gcp ? try(module.gcp[0].batch_runtime_service_account_email, null) : try(module.azure[0].batch_pool_id, null)
 }
 
 output "aws_batch_compute_environment_arn" {
@@ -76,4 +81,49 @@ output "gcp_scheduler_job_id" {
 output "gcp_workflow_executions_uri" {
   description = "GCP Workflows executions URI, or null when AWS is selected."
   value       = try(module.gcp[0].workflow_executions_uri, null)
+}
+
+output "azure_storage_account_name" {
+  description = "Azure storage account name, or null when Azure is not selected."
+  value       = try(module.azure[0].storage_account_name, null)
+}
+
+output "azure_batch_account_id" {
+  description = "Azure Batch account ID, or null when Azure is not selected."
+  value       = try(module.azure[0].batch_account_id, null)
+}
+
+output "azure_batch_account_name" {
+  description = "Azure Batch account name, or null when Azure is not selected."
+  value       = try(module.azure[0].batch_account_name, null)
+}
+
+output "azure_batch_account_endpoint" {
+  description = "Azure Batch account endpoint, or null when Azure is not selected."
+  value       = try(module.azure[0].batch_account_endpoint, null)
+}
+
+output "azure_batch_pool_id" {
+  description = "Azure Batch pool ID, or null when Azure is not selected."
+  value       = try(module.azure[0].batch_pool_id, null)
+}
+
+output "azure_batch_pool_name" {
+  description = "Azure Batch pool name, or null when Azure is not selected."
+  value       = try(module.azure[0].batch_pool_name, null)
+}
+
+output "azure_logic_app_name" {
+  description = "Azure Logic App workflow name, or null when Azure is not selected."
+  value       = try(module.azure[0].logic_app_name, null)
+}
+
+output "azure_logic_app_id" {
+  description = "Azure Logic App workflow ID, or null when Azure is not selected."
+  value       = try(module.azure[0].logic_app_id, null)
+}
+
+output "azure_logic_app_identity_principal_id" {
+  description = "Azure Logic App managed identity principal ID, or null when Azure is not selected."
+  value       = try(module.azure[0].logic_app_identity_principal_id, null)
 }

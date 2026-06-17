@@ -4,7 +4,7 @@ resource "terraform_data" "validate_aws_config" {
   lifecycle {
     precondition {
       condition = (
-        try(var.aws_config.vpc_id, "") != "" &&
+        coalesce(try(var.aws_config.vpc_id, null), "") != "" &&
         length(try(var.aws_config.subnet_ids, [])) > 0
       )
       error_message = "cloud_provider=\"aws\" zahteva aws_config.vpc_id i aws_config.subnet_ids."
@@ -17,8 +17,26 @@ resource "terraform_data" "validate_gcp_config" {
 
   lifecycle {
     precondition {
-      condition     = try(var.gcp_config.project_id, "") != ""
+      condition     = coalesce(try(var.gcp_config.project_id, null), "") != ""
       error_message = "cloud_provider=\"gcp\" zahteva gcp_config.project_id."
+    }
+  }
+}
+
+resource "terraform_data" "validate_azure_config" {
+  count = local.is_azure ? 1 : 0
+
+  lifecycle {
+    precondition {
+      condition = (
+        coalesce(try(var.azure_config.subscription_id, null), "") != "" &&
+        coalesce(try(var.azure_config.resource_group_name, null), "") != "" &&
+        (
+          try(var.azure_config.public_address_provisioning_type, "BatchManaged") != "NoPublicIPAddresses" ||
+          coalesce(try(var.azure_config.subnet_id, null), "") != ""
+        )
+      )
+      error_message = "cloud_provider=\"azure\" zahteva azure_config.subscription_id i azure_config.resource_group_name. Ako je public_address_provisioning_type=\"NoPublicIPAddresses\", potreban je i azure_config.subnet_id."
     }
   }
 }
@@ -80,4 +98,59 @@ module "gcp" {
   labels                                          = local.gcp_labels
 
   depends_on = [terraform_data.validate_gcp_config]
+}
+
+module "azure" {
+  source = "../../azure/scheduled-batch-job"
+  count  = local.is_azure ? 1 : 0
+
+  subscription_id     = try(var.azure_config.subscription_id, "")
+  resource_group_name = try(var.azure_config.resource_group_name, "")
+  location            = try(var.azure_config.location, "westeurope")
+
+  name                   = var.name
+  container_image        = var.container_image
+  container_command_line = local.azure_command_line
+  environment_variables  = var.environment_variables
+
+  storage_account_name = try(var.azure_config.storage_account_name, null)
+  batch_account_name   = try(var.azure_config.batch_account_name, null)
+  pool_name            = try(var.azure_config.pool_name, null)
+
+  vm_size                   = try(var.azure_config.vm_size, "STANDARD_D2S_V3")
+  node_agent_sku_id         = try(var.azure_config.node_agent_sku_id, "batch.node.ubuntu 20.04")
+  target_dedicated_nodes    = try(var.azure_config.target_dedicated_nodes, 0)
+  target_low_priority_nodes = try(var.azure_config.target_low_priority_nodes, 1)
+  max_tasks_per_node        = try(var.azure_config.max_tasks_per_node, 1)
+
+  preload_container_image = try(var.azure_config.preload_container_image, true)
+  create_pool_identity    = try(var.azure_config.create_pool_identity, true)
+  acr_id                  = try(var.azure_config.acr_id, null)
+
+  subnet_id                        = try(var.azure_config.subnet_id, null)
+  public_address_provisioning_type = try(var.azure_config.public_address_provisioning_type, "BatchManaged")
+
+  recurrence_frequency = try(var.azure_config.recurrence_frequency, "Day")
+  recurrence_interval  = try(var.azure_config.recurrence_interval, 1)
+  recurrence_time_zone = try(var.azure_config.recurrence_time_zone, "Central Europe Standard Time")
+  recurrence_hours     = try(var.azure_config.recurrence_hours, [3])
+  recurrence_minutes   = try(var.azure_config.recurrence_minutes, [0])
+  recurrence_week_days = try(var.azure_config.recurrence_week_days, [])
+  start_time           = try(var.azure_config.start_time, null)
+
+  task_max_wall_clock_time = try(var.azure_config.task_max_wall_clock_time, "PT1H")
+  task_retention_time      = try(var.azure_config.task_retention_time, "P1D")
+  task_retry_maximum       = try(var.azure_config.task_retry_maximum, 0)
+  poll_interval_seconds    = try(var.azure_config.poll_interval_seconds, 30)
+  max_poll_attempts        = try(var.azure_config.max_poll_attempts, 120)
+
+  delete_job_on_completion      = try(var.azure_config.delete_job_on_completion, false)
+  terminate_job_on_task_failure = try(var.azure_config.terminate_job_on_task_failure, true)
+  batch_role_definition_name    = try(var.azure_config.batch_role_definition_name, "Azure Batch Job Submitter")
+
+  enable_command_override_from_trigger_body = var.enable_command_override_from_scheduler_input
+
+  tags = local.azure_tags
+
+  depends_on = [terraform_data.validate_azure_config]
 }
