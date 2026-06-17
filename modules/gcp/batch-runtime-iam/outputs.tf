@@ -4,8 +4,8 @@ output "service_account_email" {
 }
 
 output "service_account_id" {
-  description = "ID of the GCP Batch runtime service account."
-  value       = google_service_account.batch_runtime.account_id
+  description = "Full resource ID of the GCP Batch runtime service account."
+  value       = google_service_account.batch_runtime.name
 }
 
 output "service_account_name" {
