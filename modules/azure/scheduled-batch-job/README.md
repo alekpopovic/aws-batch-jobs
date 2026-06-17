@@ -106,6 +106,8 @@ When `acr_id` is set and `create_pool_identity = true`, the Batch account/pool m
 
 Set `enable_command_override_from_trigger_body = true` to allow the Logic App trigger body to override the default `container_command_line`.
 
+Azure Batch task `commandLine` is a string, not a list. AWS and GCP modules often model commands as `list(string)`, but Azure sends one shell command line to the Batch task.
+
 Manual trigger body example:
 
 ```json
@@ -113,5 +115,7 @@ Manual trigger body example:
   "commandLine": "/bin/sh -c \"echo manual Azure Batch run; date; env\""
 }
 ```
+
+If `commandLine` is not present in the trigger body, the workflow uses `container_command_line`.
 
 Keep secrets out of trigger bodies and Terraform variable files. Use Azure Key Vault or another managed secret store for sensitive runtime values.

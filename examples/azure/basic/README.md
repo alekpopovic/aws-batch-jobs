@@ -56,3 +56,17 @@ az batch job list \
 ```
 
 The `az batch` CLI often needs an active Azure login and account context. Use `az account show` to confirm the selected subscription.
+
+## Command Override
+
+The Azure Batch task command is a single `commandLine` string. To allow a Logic App trigger body to override it, set `enable_command_override_from_trigger_body = true` in the `scheduled_batch_job` module call.
+
+Example trigger body:
+
+```json
+{
+  "commandLine": "/bin/sh -c \"echo override from Logic App trigger; date; env\""
+}
+```
+
+If `commandLine` is missing, the Logic App uses `container_command_line`.

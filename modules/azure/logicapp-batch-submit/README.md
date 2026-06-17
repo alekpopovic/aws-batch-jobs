@@ -48,7 +48,19 @@ The workflow:
 
 By default, tasks use `container_command_line`.
 
-Set `enable_command_override_from_trigger_body = true` to let `triggerBody().commandLine` override it. For manual testing, `manual_trigger_body.commandLine` can provide the same value.
+Set `enable_command_override_from_trigger_body = true` to let `triggerBody().commandLine` override it. When `commandLine` is not present, the workflow falls back to `container_command_line`.
+
+Azure Batch task `commandLine` is a single string. This differs from AWS and GCP examples in this repository, where commands are often represented as `list(string)`.
+
+Example trigger body:
+
+```json
+{
+  "commandLine": "/bin/sh -c \"echo override from Logic App trigger; date; env\""
+}
+```
+
+For complex Azure commands, prefer setting `container_command_line` explicitly instead of relying on a generated string from a list.
 
 ## Usage
 

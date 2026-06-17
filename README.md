@@ -250,6 +250,18 @@ az batch task list --job-id JOB_ID --account-name BATCH_ACCOUNT_NAME --account-e
 az batch task show --job-id JOB_ID --task-id TASK_ID --account-name BATCH_ACCOUNT_NAME --account-endpoint "https://BATCH_ACCOUNT_ENDPOINT"
 ```
 
+Azure command override:
+
+Azure Batch task `commandLine` is a single string. This differs from AWS and GCP command inputs, which are commonly represented as `list(string)`.
+
+```json
+{
+  "commandLine": "/bin/sh -c \"echo override from Logic App trigger; date; env\""
+}
+```
+
+In the multicloud switcher, simple Azure commands can be derived by joining the common `container_command` list. For complex Azure commands, prefer `azure_config.container_command_line`.
+
 ## Troubleshooting
 
 AWS:

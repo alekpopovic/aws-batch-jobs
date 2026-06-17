@@ -92,6 +92,16 @@ Schedule configuration differs by provider:
 - GCP `schedule_expression`: unix cron syntax, for example `0 3 * * *`.
 - Azure `recurrence_*`: Logic Apps Recurrence fields such as frequency, interval, hours, minutes, and time zone.
 
+Azure Batch task commands are strings. In the multicloud switcher, the common `container_command` list is joined into a command line for simple Azure commands. For complex Azure commands, set `azure_config.container_command_line` explicitly.
+
+When `enable_command_override_from_scheduler_input = true` and `cloud_provider = "azure"`, the switcher maps that setting to the Azure Logic App command override. The trigger body must contain a string:
+
+```json
+{
+  "commandLine": "/bin/sh -c \"echo override from Logic App trigger; date; env\""
+}
+```
+
 ## Authentication
 
 Provider credentials come from the standard AWS, GCP, and Azure authentication mechanisms.
