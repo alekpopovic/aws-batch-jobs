@@ -312,3 +312,4 @@ GCP:
 General:
 
 - Do not commit real `*.tfvars`, Terraform state files, credentials, or secrets.
+- Do not put secret values in `tfvars`; use AWS Secrets Manager or Google Cloud Secret Manager and grant only the runtime role or runtime service account the access it needs.

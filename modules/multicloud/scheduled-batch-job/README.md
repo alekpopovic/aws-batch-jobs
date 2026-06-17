@@ -67,10 +67,10 @@ module "scheduled_job" {
 
   cloud_provider  = "gcp"
   name            = "scheduled-batch-gcp"
-  container_image = "europe-docker.pkg.dev/my-project/jobs/my-job:latest"
+  container_image = "europe-docker.pkg.dev/<gcp-project-id>/jobs/my-job:latest"
 
   gcp_config = {
-    project_id = "my-project"
+    project_id = "<gcp-project-id>"
     region     = "europe-west1"
   }
 
@@ -94,3 +94,9 @@ scheduler_input = {
 ```
 
 For production, provider-specific examples are often clearer because AWS and GCP have different networking, schedule formats, IAM models, and operational details. This switcher is useful when you want one uniform Terraform interface.
+
+## Credentials And Secrets
+
+Provider credentials come from standard AWS and GCP authentication mechanisms. Do not put credentials or secrets in `tfvars`.
+
+Application secrets should live in AWS Secrets Manager or Google Cloud Secret Manager. Grant access only to the AWS Batch job role or GCP Batch runtime service account when the container needs those secrets.
