@@ -1,0 +1,29 @@
+cloud_provider = "gcp"
+
+name = "scheduled-batch-gcp"
+
+container_image = "europe-west1-docker.pkg.dev/my-gcp-project-id/my-repo/my-image:latest"
+
+schedule_expression = "0 3 * * *"
+schedule_timezone   = "Europe/Belgrade"
+
+gcp_config = {
+  project_id         = "my-gcp-project-id"
+  region             = "europe-west1"
+  task_count         = 1
+  parallelism        = 1
+  cpu_milli          = 1000
+  memory_mib         = 512
+  machine_type       = "e2-standard-2"
+  provisioning_model = "STANDARD"
+}
+
+environment_variables = {
+  APP_ENV   = "dev"
+  LOG_LEVEL = "info"
+}
+
+tags = {
+  project = "scheduled-batch"
+  env     = "dev"
+}

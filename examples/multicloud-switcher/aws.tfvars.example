@@ -1,0 +1,29 @@
+cloud_provider = "aws"
+
+name = "scheduled-batch-aws"
+
+container_image = "123456789012.dkr.ecr.eu-central-1.amazonaws.com/my-batch-job:latest"
+
+schedule_expression = "cron(0 3 * * ? *)"
+schedule_timezone   = "Europe/Belgrade"
+
+aws_region = "eu-central-1"
+
+aws_config = {
+  vpc_id           = "vpc-xxxxxxxxxxxxxxxxx"
+  subnet_ids       = ["subnet-aaaaaaaaaaaaaaaaa", "subnet-bbbbbbbbbbbbbbbbb"]
+  assign_public_ip = false
+  max_vcpus        = 4
+  job_vcpu         = "0.25"
+  job_memory       = "512"
+}
+
+environment_variables = {
+  APP_ENV   = "dev"
+  LOG_LEVEL = "info"
+}
+
+tags = {
+  Project = "scheduled-batch"
+  Env     = "dev"
+}

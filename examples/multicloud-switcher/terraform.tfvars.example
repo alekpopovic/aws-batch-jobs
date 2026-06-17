@@ -1,2 +1,0 @@
-provider_name = "aws"
-name          = "multicloud-scheduled-jobs-switcher"
