@@ -29,6 +29,20 @@ terraform plan
 terraform apply
 ```
 
+## Manual Run
+
+Start a Step Functions execution manually:
+
+```bash
+aws stepfunctions start-execution --state-machine-arn "$(terraform output -raw state_machine_arn)" --input '{"manual": true}'
+```
+
+List running AWS Batch jobs:
+
+```bash
+aws batch list-jobs --job-queue "$(terraform output -raw batch_job_queue_arn)" --job-status RUNNING
+```
+
 ## Troubleshooting
 
 If Batch jobs fail with `CannotPullContainerError`, check:
