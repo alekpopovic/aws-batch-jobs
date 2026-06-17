@@ -180,6 +180,55 @@ module "scheduled_batch_job" {
 }
 ```
 
+## Makefile Usage
+
+The root `Makefile` is a convenience wrapper for `examples/multicloud-switcher`.
+
+First create local tfvars files from the examples:
+
+```bash
+cp examples/multicloud-switcher/aws.tfvars.example examples/multicloud-switcher/aws.tfvars
+cp examples/multicloud-switcher/gcp.tfvars.example examples/multicloud-switcher/gcp.tfvars
+cp examples/multicloud-switcher/azure.tfvars.example examples/multicloud-switcher/azure.tfvars
+```
+
+Real `*.tfvars` files are ignored by `.gitignore`; keep credentials and secrets out of them.
+
+AWS:
+
+```bash
+make init CLOUD=aws
+make validate CLOUD=aws
+make plan CLOUD=aws
+make apply CLOUD=aws
+```
+
+GCP:
+
+```bash
+make init CLOUD=gcp
+make validate CLOUD=gcp
+make plan CLOUD=gcp
+make apply CLOUD=gcp
+```
+
+Azure:
+
+```bash
+make init CLOUD=azure
+make validate CLOUD=azure
+make plan CLOUD=azure
+make apply CLOUD=azure
+```
+
+Destroy uses the same provider switch:
+
+```bash
+make destroy CLOUD=aws
+make destroy CLOUD=gcp
+make destroy CLOUD=azure
+```
+
 ## Azure Setup Notes
 
 - Azure provider auth uses standard Azure authentication mechanisms, such as `az login`, workload identity, managed identity, or other AzureRM-supported flows.

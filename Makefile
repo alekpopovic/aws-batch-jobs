@@ -2,8 +2,8 @@ CLOUD ?= aws
 DIR := examples/multicloud-switcher
 TFVARS := $(CLOUD).tfvars
 
-ifeq ($(filter $(CLOUD),aws gcp),)
-$(error CLOUD must be aws or gcp, got "$(CLOUD)")
+ifeq ($(filter $(CLOUD),aws gcp azure),)
+$(error CLOUD must be aws, gcp, or azure, got "$(CLOUD)")
 endif
 
 .PHONY: fmt init validate plan apply destroy
