@@ -1,10 +1,16 @@
-project_id = "<gcp-project-id>"
+project_id = "my-gcp-project-id"
 region     = "europe-west1"
-name       = "multicloud-scheduled-jobs-gcp-private"
-network    = "projects/<gcp-project-id>/global/networks/example"
-subnetwork = "projects/<gcp-project-id>/regions/europe-west1/subnetworks/private"
+name       = "scheduled-batch-gcp-private"
+
+container_image = "europe-west1-docker.pkg.dev/my-gcp-project-id/my-repo/my-image:latest"
+
+ip_cidr_range    = "10.20.0.0/24"
+create_cloud_nat = false
+
+schedule  = "0 3 * * *"
+time_zone = "Europe/Belgrade"
 
 labels = {
-  project = "multicloud-scheduled-jobs"
-  env     = "prod"
+  project = "scheduled-batch"
+  env     = "dev"
 }

@@ -4,7 +4,7 @@ variable "project_id" {
 }
 
 variable "region" {
-  description = "GCP region for the example."
+  description = "GCP region for Workflows, Cloud Scheduler, and Batch."
   type        = string
   default     = "europe-west1"
 }
@@ -12,7 +12,24 @@ variable "region" {
 variable "name" {
   description = "Name prefix for the scheduled GCP Batch job."
   type        = string
-  default     = "multicloud-scheduled-jobs-gcp-basic"
+  default     = "scheduled-batch-gcp-basic"
+}
+
+variable "container_image" {
+  description = "Container image URI used by the Cloud Batch job."
+  type        = string
+}
+
+variable "schedule" {
+  description = "Cloud Scheduler unix cron schedule."
+  type        = string
+  default     = "0 3 * * *"
+}
+
+variable "time_zone" {
+  description = "Time zone used by Cloud Scheduler."
+  type        = string
+  default     = "Europe/Belgrade"
 }
 
 variable "labels" {

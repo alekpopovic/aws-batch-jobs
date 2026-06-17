@@ -3,20 +3,49 @@ provider "google" {
   region  = var.region
 }
 
-module "private_network" {
-  source = "../../../modules/gcp/batch-private-network"
+module "project_services" {
+  source = "../../../modules/gcp/project-services"
 
   project_id = var.project_id
-  network    = var.network
-  subnetwork = var.subnetwork
-  labels     = var.labels
+}
+
+module "network" {
+  source = "../../../modules/gcp/batch-private-network"
+
+  project_id       = var.project_id
+  region           = var.region
+  name             = var.name
+  ip_cidr_range    = var.ip_cidr_range
+  create_cloud_nat = var.create_cloud_nat
+
+  depends_on = [module.project_services]
 }
 
 module "scheduled_batch_job" {
   source = "../../../modules/gcp/scheduled-batch-job"
 
-  project_id = var.project_id
-  name       = var.name
-  region     = var.region
-  labels     = var.labels
+  project_id      = var.project_id
+  region          = var.region
+  name            = var.name
+  container_image = var.container_image
+
+  container_commands = ["sh", "-c", "echo Private Google Access Batch job; date; env"]
+
+  environment_variables = {
+    APP_ENV   = "dev"
+    LOG_LEVEL = "info"
+  }
+
+  network                = module.network.network_self_link
+  subnetwork             = module.network.subnetwork_self_link
+  no_external_ip_address = true
+
+  schedule  = var.schedule
+  time_zone = var.time_zone
+  labels    = var.labels
+
+  depends_on = [
+    module.project_services,
+    module.network,
+  ]
 }

@@ -1,8 +1,13 @@
-project_id = "<gcp-project-id>"
+project_id = "my-gcp-project-id"
 region     = "europe-west1"
-name       = "multicloud-scheduled-jobs-gcp-basic"
+name       = "scheduled-batch-gcp-basic"
+
+container_image = "europe-west1-docker.pkg.dev/my-gcp-project-id/my-repo/my-image:latest"
+
+schedule  = "0 3 * * *"
+time_zone = "Europe/Belgrade"
 
 labels = {
-  project = "multicloud-scheduled-jobs"
+  project = "scheduled-batch"
   env     = "dev"
 }
