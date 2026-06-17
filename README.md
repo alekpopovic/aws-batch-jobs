@@ -170,6 +170,44 @@ AWS-specific inputs go in `aws_config`, including VPC ID, subnet IDs, public IP 
 
 GCP-specific inputs go in `gcp_config`, including project ID, region, Batch task sizing, runtime service account roles, network, subnetwork, and private IP behavior.
 
+## Makefile Usage
+
+The root `Makefile` is a convenience wrapper for `examples/multicloud-switcher`.
+
+First create local tfvars files from the examples:
+
+```bash
+cp examples/multicloud-switcher/aws.tfvars.example examples/multicloud-switcher/aws.tfvars
+cp examples/multicloud-switcher/gcp.tfvars.example examples/multicloud-switcher/gcp.tfvars
+```
+
+Real `*.tfvars` files are ignored by `.gitignore`; keep credentials and secrets out of them.
+
+AWS:
+
+```bash
+make init CLOUD=aws
+make validate CLOUD=aws
+make plan CLOUD=aws
+make apply CLOUD=aws
+```
+
+GCP:
+
+```bash
+make init CLOUD=gcp
+make validate CLOUD=gcp
+make plan CLOUD=gcp
+make apply CLOUD=gcp
+```
+
+Destroy uses the same provider switch:
+
+```bash
+make destroy CLOUD=aws
+make destroy CLOUD=gcp
+```
+
 ## AWS Setup Notes
 
 - Private subnet + NAT Gateway: use `assign_public_ip = false`; Fargate reaches ECR, CloudWatch Logs, and other endpoints through NAT.
