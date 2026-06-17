@@ -1,8 +1,8 @@
-project_id = "my-gcp-project-id"
+project_id = "<gcp-project-id>"
 region     = "europe-west1"
 name       = "scheduled-batch-gcp-private"
 
-container_image = "europe-west1-docker.pkg.dev/my-gcp-project-id/my-repo/my-image:latest"
+container_image = "europe-west1-docker.pkg.dev/<gcp-project-id>/my-repo/my-image:latest"
 
 ip_cidr_range    = "10.20.0.0/24"
 create_cloud_nat = false

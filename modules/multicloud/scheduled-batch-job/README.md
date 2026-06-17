@@ -41,7 +41,7 @@ module "scheduled_job" {
 
   cloud_provider  = "aws"
   name            = "scheduled-batch-aws"
-  container_image = "123456789012.dkr.ecr.eu-central-1.amazonaws.com/my-job:latest"
+  container_image = "<aws-account-id>.dkr.ecr.eu-central-1.amazonaws.com/my-job:latest"
 
   aws_config = {
     vpc_id     = "vpc-xxxxxxxxxxxxxxxxx"

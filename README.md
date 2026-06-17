@@ -123,10 +123,10 @@ Use `modules/gcp/scheduled-batch-job` when you want the GCP implementation direc
 module "scheduled_batch_job" {
   source = "./modules/gcp/scheduled-batch-job"
 
-  project_id      = "my-gcp-project-id"
+  project_id      = "<gcp-project-id>"
   region          = "europe-west1"
   name            = "scheduled-batch-gcp"
-  container_image = "europe-west1-docker.pkg.dev/my-gcp-project-id/my-repo/my-image:latest"
+  container_image = "europe-west1-docker.pkg.dev/<gcp-project-id>/my-repo/my-image:latest"
 
   schedule  = "0 3 * * *"
   time_zone = "Europe/Belgrade"

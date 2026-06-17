@@ -2,13 +2,13 @@ cloud_provider = "gcp"
 
 name = "scheduled-batch-gcp"
 
-container_image = "europe-west1-docker.pkg.dev/my-gcp-project-id/my-repo/my-image:latest"
+container_image = "europe-west1-docker.pkg.dev/<gcp-project-id>/my-repo/my-image:latest"
 
 schedule_expression = "0 3 * * *"
 schedule_timezone   = "Europe/Belgrade"
 
 gcp_config = {
-  project_id         = "my-gcp-project-id"
+  project_id         = "<gcp-project-id>"
   region             = "europe-west1"
   task_count         = 1
   parallelism        = 1
