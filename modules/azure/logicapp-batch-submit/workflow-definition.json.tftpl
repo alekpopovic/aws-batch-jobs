@@ -1,0 +1,388 @@
+{
+  "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {},
+  "triggers": {
+    "Recurrence": {
+      "type": "Recurrence",
+      "recurrence": ${recurrence_json}
+    }
+  },
+  "actions": {
+    "Initialize_job_id": {
+      "type": "InitializeVariable",
+      "inputs": {
+        "variables": [
+          {
+            "name": "job_id",
+            "type": "String",
+            "value": "@{concat('${safe_name}-', ticks(utcNow()))}"
+          }
+        ]
+      },
+      "runAfter": {}
+    },
+    "Initialize_task_id": {
+      "type": "InitializeVariable",
+      "inputs": {
+        "variables": [
+          {
+            "name": "task_id",
+            "type": "String",
+            "value": "main"
+          }
+        ]
+      },
+      "runAfter": {
+        "Initialize_job_id": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Initialize_command_line": {
+      "type": "InitializeVariable",
+      "inputs": {
+        "variables": [
+          {
+            "name": "command_line",
+            "type": "String",
+            "value": %{ if enable_command_override_from_trigger_body }"@{coalesce(triggerBody()?['commandLine'], parameters('manualTriggerBody')?['commandLine'], parameters('defaultCommandLine'))}"%{ else }"@{parameters('defaultCommandLine')}"%{ endif }
+          }
+        ]
+      },
+      "runAfter": {
+        "Initialize_task_id": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Initialize_task_state": {
+      "type": "InitializeVariable",
+      "inputs": {
+        "variables": [
+          {
+            "name": "task_state",
+            "type": "String",
+            "value": "active"
+          }
+        ]
+      },
+      "runAfter": {
+        "Initialize_command_line": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Initialize_exit_code": {
+      "type": "InitializeVariable",
+      "inputs": {
+        "variables": [
+          {
+            "name": "exit_code",
+            "type": "Integer",
+            "value": -1
+          }
+        ]
+      },
+      "runAfter": {
+        "Initialize_task_state": [
+          "Succeeded"
+        ]
+      }
+    },
+    "Initialize_poll_attempts": {
+      "type": "InitializeVariable",
+      "inputs": {
+        "variables": [
+          {
+            "name": "poll_attempts",
+            "type": "Integer",
+            "value": 0
+          }
+        ]
+      },
+      "runAfter": {
+        "Initialize_exit_code": [
+          "Succeeded"
+        ]
+      }
+    },
+    "CreateJob": {
+      "type": "Http",
+      "inputs": {
+        "method": "POST",
+        "uri": "${batch_account_url}/jobs?api-version=${batch_api_version}",
+        "authentication": {
+          "type": "ManagedServiceIdentity",
+          "audience": "https://batch.core.windows.net/"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "id": "@{variables('job_id')}",
+          "displayName": "@{variables('job_id')}",
+          "poolInfo": {
+            "poolId": "${batch_pool_name}"
+          },
+          "onAllTasksComplete": "terminatejob",
+          "onTaskFailure": "performExitOptionsJobAction"
+        }
+      },
+      "runAfter": {
+        "Initialize_poll_attempts": [
+          "Succeeded"
+        ]
+      }
+    },
+    "CreateTask": {
+      "type": "Http",
+      "inputs": {
+        "method": "POST",
+        "uri": "${batch_account_url}/jobs/@{variables('job_id')}/tasks?api-version=${batch_api_version}",
+        "authentication": {
+          "type": "ManagedServiceIdentity",
+          "audience": "https://batch.core.windows.net/"
+        },
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "id": "main",
+          "commandLine": "@{variables('command_line')}",
+          "containerSettings": {
+            "imageName": "${container_image}"
+          },
+          "environmentSettings": ${environment_settings_json},
+          "constraints": {
+            "maxWallClockTime": "${task_max_wall_clock_time}",
+            "retentionTime": "${task_retention_time}",
+            "maxTaskRetryCount": ${task_retry_maximum}
+          }
+        }
+      },
+      "runAfter": {
+        "CreateJob": [
+          "Succeeded"
+        ]
+      }
+    },
+    "PollUntilCompleted": {
+      "type": "Until",
+      "expression": "@or(equals(variables('task_state'), 'completed'), greaterOrEquals(variables('poll_attempts'), ${max_poll_attempts}))",
+      "limit": {
+        "count": ${max_poll_attempts},
+        "timeout": "PT24H"
+      },
+      "actions": {
+        "WaitBeforePoll": {
+          "type": "Wait",
+          "inputs": {
+            "interval": {
+              "count": ${poll_interval_seconds},
+              "unit": "Second"
+            }
+          },
+          "runAfter": {}
+        },
+        "GetTask": {
+          "type": "Http",
+          "inputs": {
+            "method": "GET",
+            "uri": "${batch_account_url}/jobs/@{variables('job_id')}/tasks/main?api-version=${batch_api_version}",
+            "authentication": {
+              "type": "ManagedServiceIdentity",
+              "audience": "https://batch.core.windows.net/"
+            }
+          },
+          "runAfter": {
+            "WaitBeforePoll": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Set_task_state": {
+          "type": "SetVariable",
+          "inputs": {
+            "name": "task_state",
+            "value": "@{body('GetTask')?['state']}"
+          },
+          "runAfter": {
+            "GetTask": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Set_exit_code": {
+          "type": "SetVariable",
+          "inputs": {
+            "name": "exit_code",
+            "value": "@{coalesce(body('GetTask')?['executionInfo']?['exitCode'], -1)}"
+          },
+          "runAfter": {
+            "Set_task_state": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Increment_poll_attempts": {
+          "type": "IncrementVariable",
+          "inputs": {
+            "name": "poll_attempts",
+            "value": 1
+          },
+          "runAfter": {
+            "Set_exit_code": [
+              "Succeeded"
+            ]
+          }
+        }
+      },
+      "runAfter": {
+        "CreateTask": [
+          "Succeeded"
+        ]
+      }
+    },
+    "CheckTaskCompleted": {
+      "type": "If",
+      "expression": "@equals(variables('task_state'), 'completed')",
+      "actions": {
+        "CheckTaskExitCode": {
+          "type": "If",
+          "expression": "@equals(variables('exit_code'), 0)",
+          "actions": {
+%{ if delete_job_on_completion ~}
+            "DeleteJobAfterSuccess": {
+              "type": "Http",
+              "inputs": {
+                "method": "DELETE",
+                "uri": "${batch_account_url}/jobs/@{variables('job_id')}?api-version=${batch_api_version}",
+                "authentication": {
+                  "type": "ManagedServiceIdentity",
+                  "audience": "https://batch.core.windows.net/"
+                }
+              },
+              "runAfter": {}
+            },
+%{ endif ~}
+            "SuccessResult": {
+              "type": "Compose",
+              "inputs": {
+                "jobId": "@{variables('job_id')}",
+                "taskId": "@{variables('task_id')}",
+                "taskState": "@{variables('task_state')}",
+                "exitCode": "@{variables('exit_code')}"
+              },
+              "runAfter": {
+%{ if delete_job_on_completion ~}
+                "DeleteJobAfterSuccess": [
+                  "Succeeded",
+                  "Failed"
+                ]
+%{ endif ~}
+              }
+            }
+          },
+          "else": {
+            "actions": {
+%{ if terminate_job_on_task_failure ~}
+              "TerminateJobAfterTaskFailure": {
+                "type": "Http",
+                "inputs": {
+                  "method": "POST",
+                  "uri": "${batch_account_url}/jobs/@{variables('job_id')}/terminate?api-version=${batch_api_version}",
+                  "authentication": {
+                    "type": "ManagedServiceIdentity",
+                    "audience": "https://batch.core.windows.net/"
+                  },
+                  "headers": {
+                    "Content-Type": "application/json"
+                  },
+                  "body": {
+                    "terminateReason": "Task exited with non-zero code @{variables('exit_code')}"
+                  }
+                },
+                "runAfter": {}
+              },
+%{ endif ~}
+              "FailTaskExitCode": {
+                "type": "Terminate",
+                "inputs": {
+                  "runStatus": "Failed",
+                  "runError": {
+                    "code": "BatchTaskFailed",
+                    "message": "Azure Batch task failed with exit code @{variables('exit_code')}"
+                  }
+                },
+                "runAfter": {
+%{ if terminate_job_on_task_failure ~}
+                  "TerminateJobAfterTaskFailure": [
+                    "Succeeded",
+                    "Failed"
+                  ]
+%{ endif ~}
+                }
+              }
+            }
+          },
+          "runAfter": {}
+        }
+      },
+      "else": {
+        "actions": {
+          "TerminateJobAfterPollTimeout": {
+            "type": "Http",
+            "inputs": {
+              "method": "POST",
+              "uri": "${batch_account_url}/jobs/@{variables('job_id')}/terminate?api-version=${batch_api_version}",
+              "authentication": {
+                "type": "ManagedServiceIdentity",
+                "audience": "https://batch.core.windows.net/"
+              },
+              "headers": {
+                "Content-Type": "application/json"
+              },
+              "body": {
+                "terminateReason": "Task polling exceeded ${max_poll_attempts} attempts"
+              }
+            },
+            "runAfter": {}
+          },
+          "FailPollTimeout": {
+            "type": "Terminate",
+            "inputs": {
+              "runStatus": "Failed",
+              "runError": {
+                "code": "BatchTaskPollingTimeout",
+                "message": "Azure Batch task did not complete after ${max_poll_attempts} polling attempts"
+              }
+            },
+            "runAfter": {
+              "TerminateJobAfterPollTimeout": [
+                "Succeeded",
+                "Failed"
+              ]
+            }
+          }
+        }
+      },
+      "runAfter": {
+        "PollUntilCompleted": [
+          "Succeeded"
+        ]
+      }
+    }
+  },
+  "outputs": {
+    "result": {
+      "type": "Object",
+      "value": {
+        "jobId": "@{variables('job_id')}",
+        "taskId": "main",
+        "taskState": "@{variables('task_state')}",
+        "exitCode": "@{variables('exit_code')}"
+      }
+    }
+  }
+}
